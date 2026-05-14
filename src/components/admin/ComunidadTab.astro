@@ -9,11 +9,11 @@ const { comunidad } = Astro.props;
     <button class="btn-primary" id="btn-add-comunidad">+ Añadir Reseña</button>
   </div>
   <div class="table-container">
-    <table>
+    <table id="table-comunidad">
       <thead><tr><th>Autor</th><th>Texto</th><th>Acciones</th></tr></thead>
       <tbody>
         {comunidad.map(item => (
-          <tr>
+          <tr data-row-id={item.id}>
             <td>{item.data.autor}</td>
             <td class="truncate">{item.body.substring(0, 50)}...</td>
             <td class="actions-cell">
@@ -22,7 +22,7 @@ const { comunidad } = Astro.props;
             </td>
           </tr>
         ))}
-        {comunidad.length === 0 && <tr><td colspan="3">No hay reseñas.</td></tr>}
+        {comunidad.length === 0 && <tr class="empty-row"><td colspan="3">No hay reseñas.</td></tr>}
       </tbody>
     </table>
   </div>
@@ -42,10 +42,10 @@ const { comunidad } = Astro.props;
 </AdminModal>
 
 <script is:inline>
-  // Logic specifically for this tab/modal
   const btnAddComunidad = document.getElementById('btn-add-comunidad');
   const modalComunidad = document.getElementById('modal-comunidad');
   const titleComunidad = modalComunidad?.querySelector('h2');
+  const tableComunidad = document.getElementById('table-comunidad').getElementsByTagName('tbody')[0];
 
   btnAddComunidad?.addEventListener('click', () => {
     document.getElementById('comunidad-id').value = '';
@@ -69,16 +69,50 @@ const { comunidad } = Astro.props;
     const autor = document.getElementById('comunidad-autor').value;
     const text = document.getElementById('comunidad-text').value;
 
-    if (!autor || !text) return alert('Faltan datos');
+    if (!autor || !text) return window.showToast('Faltan datos', true);
 
     const method = id ? 'PUT' : 'POST';
+    window.showToast('Guardando...');
+    
     const response = await fetch('/api/comunidad', {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, autor, text })
     });
 
-    if (response.ok) window.location.reload();
-    else alert('Error al guardar');
+    if (response.ok) {
+      const result = await response.json();
+      window.showToast('Guardado con éxito');
+      modalComunidad.style.display = 'none';
+
+      if (id) {
+        // Update existing
+        const row = document.querySelector(`tr[data-row-id="${id}"]`);
+        if (row) {
+          row.cells[0].innerText = autor;
+          row.cells[1].innerText = text.substring(0, 50) + '...';
+          const editBtn = row.querySelector('.btn-edit');
+          editBtn.dataset.autor = autor;
+          editBtn.dataset.text = text;
+        }
+      } else {
+        // Append new
+        const emptyRow = tableComunidad.querySelector('.empty-row');
+        if (emptyRow) emptyRow.remove();
+
+        const newRow = tableComunidad.insertRow();
+        newRow.dataset.rowId = result.id;
+        newRow.innerHTML = `
+          <td>${autor}</td>
+          <td class="truncate">${text.substring(0, 50)}...</td>
+          <td class="actions-cell">
+            <button class="btn-edit" data-id="${result.id}" data-autor="${autor}" data-text="${text}" onclick="editComunidad(this)">Editar</button>
+            <button class="btn-danger" onclick="deleteItem('comunidad', '${result.id}')">Eliminar</button>
+          </td>
+        `;
+      }
+    } else {
+      window.showToast('Error al guardar', true);
+    }
   });
 </script>

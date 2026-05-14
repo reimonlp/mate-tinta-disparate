@@ -9,11 +9,11 @@ const { dudas } = Astro.props;
     <button class="btn-primary" id="btn-add-duda">+ Añadir Pregunta</button>
   </div>
   <div class="table-container">
-    <table>
+    <table id="table-dudas">
       <thead><tr><th>Orden</th><th>Pregunta</th><th>Respuesta</th><th>Acciones</th></tr></thead>
       <tbody>
         {dudas.sort((a,b)=> (a.data.orden || 0) - (b.data.orden || 0)).map(item => (
-          <tr>
+          <tr data-row-id={item.id}>
             <td>{item.data.orden}</td>
             <td>{item.data.pregunta}</td>
             <td class="truncate">{item.body.substring(0, 50)}...</td>
@@ -23,7 +23,7 @@ const { dudas } = Astro.props;
             </td>
           </tr>
         ))}
-        {dudas.length === 0 && <tr><td colspan="4">No hay dudas.</td></tr>}
+        {dudas.length === 0 && <tr class="empty-row"><td colspan="4">No hay dudas.</td></tr>}
       </tbody>
     </table>
   </div>
@@ -49,6 +49,7 @@ const { dudas } = Astro.props;
 <script is:inline>
   const btnAddDuda = document.getElementById('btn-add-duda');
   const modalDuda = document.getElementById('modal-duda');
+  const tableDudas = document.getElementById('table-dudas').getElementsByTagName('tbody')[0];
 
   btnAddDuda?.addEventListener('click', () => {
     document.getElementById('duda-id').value = '';
@@ -69,21 +70,25 @@ const { dudas } = Astro.props;
 
   document.getElementById('submit-duda')?.addEventListener('click', async () => {
     const id = document.getElementById('duda-id').value;
-    const data = {
-      id,
-      pregunta: document.getElementById('duda-pregunta').value,
-      text: document.getElementById('duda-text').value,
-      orden: parseInt(document.getElementById('duda-orden').value),
-    };
+    const pregunta = document.getElementById('duda-pregunta').value;
+    const text = document.getElementById('duda-text').value;
+    const orden = parseInt(document.getElementById('duda-orden').value);
 
-    const method = id ? 'PUT' : 'POST';
+    if (!pregunta || !text) return window.showToast('Faltan datos', true);
+
+    window.showToast('Guardando...');
     const response = await fetch('/api/dudas', {
-      method,
+      method: id ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify({ id, pregunta, text, orden })
     });
 
-    if (response.ok) window.location.reload();
-    else alert('Error al guardar');
+    if (response.ok) {
+      window.showToast('Guardado con éxito');
+      // Recargamos para mantener el orden correcto de la tabla según 'orden'
+      setTimeout(() => window.location.reload(), 500);
+    } else {
+      window.showToast('Error al guardar', true);
+    }
   });
 </script>

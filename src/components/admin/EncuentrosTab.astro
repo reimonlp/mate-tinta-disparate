@@ -116,13 +116,18 @@ const { encuentros } = Astro.props;
     };
 
     const method = id ? 'PUT' : 'POST';
+    window.showToast('Guardando...');
     const response = await fetch('/api/encuentros', {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
 
-    if (response.ok) window.location.reload();
-    else alert('Error al guardar');
+    if (response.ok) {
+      window.showToast('Guardado con éxito');
+      setTimeout(() => window.location.reload(), 500);
+    } else {
+      window.showToast('Error al guardar', true);
+    }
   });
 </script>

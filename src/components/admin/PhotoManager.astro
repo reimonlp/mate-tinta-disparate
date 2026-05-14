@@ -8,16 +8,16 @@ const { photos } = Astro.props;
     <h2>Galería de Fotos</h2>
     <button class="btn-primary" id="btn-add-photo">+ Subir Foto</button>
   </div>
-  <div class="photos-grid">
+  <div class="photos-grid" id="photos-container">
     {photos.map(photo => (
-      <div class="photo-card">
+      <div class="photo-card" data-photo-id={photo}>
         <img src={`/photos/${photo}`} alt={photo} loading="lazy" />
         <div class="photo-actions">
-          <button class="btn-danger btn-sm" onclick={`deleteItem('photos', '${photo}', 'fileName')`}>Eliminar</button>
+          <button class="btn-danger btn-sm" onclick={`deleteItem('photos', '${photo}')`}>Eliminar</button>
         </div>
       </div>
     ))}
-    {photos.length === 0 && <p>No hay fotos subidas.</p>}
+    {photos.length === 0 && <p id="no-photos">No hay fotos subidas.</p>}
   </div>
 </section>
 
@@ -40,12 +40,14 @@ const { photos } = Astro.props;
 
   document.getElementById('submit-photo')?.addEventListener('click', async () => {
     const input = document.getElementById('photo-input');
-    if (!input.files || input.files.length === 0) return alert('Seleccioná una imagen');
+    if (!input.files || input.files.length === 0) return window.showToast('Seleccioná una imagen', true);
 
     const file = input.files[0];
     const reader = new FileReader();
     reader.onload = async (e) => {
       const base64 = e.target.result.split(',')[1];
+      window.showToast('Subiendo y optimizando...');
+      
       const response = await fetch('/api/photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,8 +58,12 @@ const { photos } = Astro.props;
         })
       });
 
-      if (response.ok) window.location.reload();
-      else alert('Error al subir');
+      if (response.ok) {
+        window.showToast('Foto subida con éxito');
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        window.showToast('Error al subir', true);
+      }
     };
     reader.readAsDataURL(file);
   });

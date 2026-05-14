@@ -100,14 +100,25 @@ const stats = [
   window.deleteItem = async (collection, id) => {
     if (!confirm('¿Seguro que querés eliminar este item?')) return;
     
+    window.showToast('Eliminando...');
+
     const response = await fetch(`/api/${collection}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id })
     });
 
-    if (response.ok) window.location.reload();
-    else alert('Error al eliminar');
+    if (response.ok) {
+      window.showToast('Eliminado con éxito');
+      // Encontrar y remover el elemento del DOM
+      const btn = document.querySelector(`button[data-id="${id}"], button[onclick*="${id}"]`);
+      if (btn) {
+        const row = btn.closest('tr') || btn.closest('.photo-card');
+        if (row) row.remove();
+      }
+    } else {
+      window.showToast('Error al eliminar', true);
+    }
   };
 
   // Close modals clicking outside
