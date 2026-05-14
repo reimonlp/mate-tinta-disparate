@@ -1,7 +1,10 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import StatCard from '../../components/admin/StatCard.astro';
-import AdminModal from '../../components/admin/AdminModal.astro';
+import PhotoManager from '../../components/admin/PhotoManager.astro';
+import ComunidadTab from '../../components/admin/ComunidadTab.astro';
+import EncuentrosTab from '../../components/admin/EncuentrosTab.astro';
+import DudasTab from '../../components/admin/DudasTab.astro';
 import { getCollection } from 'astro:content';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -65,502 +68,107 @@ const stats = [
     </div>
   </section>
 
-  <!-- FOTOS TAB -->
-  <section id="fotos" class="tab-content">
-    <div class="section-header">
-      <h2>Galería de Fotos</h2>
-      <button class="btn-primary" id="btn-add-photo">+ Subir Foto</button>
-    </div>
-    <div class="photos-grid">
-      {photos.map(photo => (
-        <div class="photo-card">
-          <img src={`/photos/${photo}`} alt={photo} loading="lazy" />
-          <div class="photo-actions">
-            <button class="btn-danger btn-sm" onclick={`deleteItem('photos', '${photo}', 'fileName')`}>Eliminar</button>
-          </div>
-        </div>
-      ))}
-      {photos.length === 0 && <p>No hay fotos subidas.</p>}
-    </div>
-  </section>
-
-  <!-- RESEÑAS TAB -->
-  <section id="comunidad" class="tab-content">
-    <div class="section-header">
-      <h2>Reseñas de la Comunidad</h2>
-      <button class="btn-primary" id="btn-add-comunidad">+ Añadir Reseña</button>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead><tr><th>Autor</th><th>Texto</th><th>Acciones</th></tr></thead>
-        <tbody>
-          {comunidad.map(item => (
-            <tr>
-              <td>{item.data.autor}</td>
-              <td class="truncate">{item.body.substring(0, 50)}...</td>
-              <td class="actions-cell">
-                <button class="btn-edit" data-id={item.id} data-autor={item.data.autor} data-text={item.body} onclick="editComunidad(this)">Editar</button>
-                <button class="btn-danger" onclick={`deleteItem('comunidad', '${item.id}')`}>Eliminar</button>
-              </td>
-            </tr>
-          ))}
-          {comunidad.length === 0 && <tr><td colspan="3">No hay reseñas.</td></tr>}
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ENCUENTROS TAB -->
-  <section id="encuentros" class="tab-content">
-    <div class="section-header">
-      <h2>Sedes y Fechas</h2>
-      <button class="btn-primary" id="btn-add-encuentro">+ Añadir Sede</button>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead><tr><th>Orden</th><th>Nombre</th><th>Día y Horario</th><th>Dirección</th><th>Acciones</th></tr></thead>
-        <tbody>
-          {encuentros.sort((a,b)=> (a.data.orden || 0) - (b.data.orden || 0)).map(item => (
-            <tr>
-              <td>{item.data.orden}</td>
-              <td>{item.data.nombre}</td>
-              <td>{item.data.dia} {item.data.horario}</td>
-              <td>{item.data.direccion}</td>
-              <td class="actions-cell">
-                <button class="btn-edit" data-id={item.id} data-payload={JSON.stringify(item.data)} onclick="editEncuentro(this)">Editar</button>
-                <button class="btn-danger" onclick={`deleteItem('encuentros', '${item.id}')`}>Eliminar</button>
-              </td>
-            </tr>
-          ))}
-          {encuentros.length === 0 && <tr><td colspan="5">No hay sedes.</td></tr>}
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- DUDAS TAB -->
-  <section id="dudas" class="tab-content">
-    <div class="section-header">
-      <h2>Preguntas Frecuentes</h2>
-      <button class="btn-primary" id="btn-add-duda">+ Añadir Pregunta</button>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead><tr><th>Orden</th><th>Pregunta</th><th>Respuesta</th><th>Acciones</th></tr></thead>
-        <tbody>
-          {dudas.sort((a,b)=> (a.data.orden || 0) - (b.data.orden || 0)).map(item => (
-            <tr>
-              <td>{item.data.orden}</td>
-              <td>{item.data.pregunta}</td>
-              <td class="truncate">{item.body.substring(0, 50)}...</td>
-              <td class="actions-cell">
-                <button class="btn-edit" data-id={item.id} data-pregunta={item.data.pregunta} data-orden={item.data.orden} data-text={item.body} onclick="editDuda(this)">Editar</button>
-                <button class="btn-danger" onclick={`deleteItem('dudas', '${item.id}')`}>Eliminar</button>
-              </td>
-            </tr>
-          ))}
-          {dudas.length === 0 && <tr><td colspan="4">No hay dudas.</td></tr>}
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- MODALS -->
-  <!-- Foto Modal -->
-  <div class="modal-overlay" id="modal-photo">
-    <div class="modal-content">
-      <button class="modal-close">✖</button>
-      <h2 class="modal-title">Subir Foto</h2>
-      <div class="form-group">
-        <label>Elegir Imagen (JPG/PNG/WEBP)</label>
-        <input type="file" id="photo-input" class="form-control" accept="image/*">
-      </div>
-      <button class="btn-primary" id="submit-photo">Subir Imagen</button>
-    </div>
-  </div>
-
-  <!-- Comunidad Modal -->
-  <div class="modal-overlay" id="modal-comunidad">
-    <div class="modal-content">
-      <button class="modal-close">✖</button>
-      <h2 class="modal-title" id="title-comunidad">Añadir Reseña</h2>
-      <input type="hidden" id="comunidad-id">
-      <div class="form-group">
-        <label>Autor / Edad (Ej: ✦ María, 42 años)</label>
-        <input type="text" id="comunidad-autor" class="form-control" placeholder="✦ Nombre, Edad">
-      </div>
-      <div class="form-group">
-        <label>Texto de la reseña</label>
-        <textarea id="comunidad-text" class="form-control" rows="4"></textarea>
-      </div>
-      <button class="btn-primary" id="submit-comunidad">Guardar</button>
-    </div>
-  </div>
-
-  <!-- Encuentros Modal -->
-  <div class="modal-overlay" id="modal-encuentro">
-    <div class="modal-content" style="max-width: 600px;">
-      <button class="modal-close">✖</button>
-      <h2 class="modal-title" id="title-encuentro">Sede / Encuentro</h2>
-      <input type="hidden" id="encuentro-id">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-        <div class="form-group">
-          <label>Nombre</label>
-          <input type="text" id="encuentro-nombre" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Día (Ej: Los sábados)</label>
-          <input type="text" id="encuentro-dia" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Horario</label>
-          <input type="text" id="encuentro-horario" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Orden (para ordenar la lista)</label>
-          <input type="number" id="encuentro-orden" class="form-control" value="0">
-        </div>
-        <div class="form-group" style="grid-column: span 2;">
-          <label>Dirección</label>
-          <input type="text" id="encuentro-direccion" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Usuario Instagram (@)</label>
-          <input type="text" id="encuentro-iguser" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>URL Instagram</label>
-          <input type="text" id="encuentro-igurl" class="form-control">
-        </div>
-        <div class="form-group" style="grid-column: span 2;">
-          <label>Google Maps Iframe URL</label>
-          <input type="text" id="encuentro-map" class="form-control">
-        </div>
-      </div>
-      <button class="btn-primary" id="submit-encuentro" style="margin-top: 1rem;">Guardar</button>
-    </div>
-  </div>
-
-  <!-- Dudas Modal -->
-  <div class="modal-overlay" id="modal-duda">
-    <div class="modal-content">
-      <button class="modal-close">✖</button>
-      <h2 class="modal-title" id="title-duda">Pregunta Frecuente</h2>
-      <input type="hidden" id="duda-id">
-      <div class="form-group">
-        <label>Pregunta</label>
-        <input type="text" id="duda-pregunta" class="form-control">
-      </div>
-      <div class="form-group">
-        <label>Orden</label>
-        <input type="number" id="duda-orden" class="form-control" value="0">
-      </div>
-      <div class="form-group">
-        <label>Respuesta (Texto)</label>
-        <textarea id="duda-text" class="form-control" rows="4"></textarea>
-      </div>
-      <button class="btn-primary" id="submit-duda">Guardar</button>
-    </div>
-  </div>
-
-  <!-- Toast Notification -->
-  <div class="toast" id="toast">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-    <span id="toast-msg">Mensaje</span>
-  </div>
-
-  <style>
-    .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--admin-border); margin-bottom: 2rem; overflow-x: auto; }
-    .tab-btn { padding: 0.75rem 1.5rem; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--admin-text-muted); font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-    .tab-btn:hover { color: var(--admin-text); }
-    .tab-btn.active { color: var(--admin-primary); border-bottom-color: var(--admin-primary); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
-    .section-header h2 { font-family: 'DM Serif Display', serif; font-size: 1.8rem; margin: 0; }
-
-    .table-container { background: var(--admin-surface); border-radius: 12px; border: 1px solid var(--admin-border); overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th, td { padding: 1rem; border-bottom: 1px solid var(--admin-border); }
-    th { background: rgba(0,0,0,0.02); font-weight: 600; color: var(--admin-text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; }
-    tr:last-child td { border-bottom: none; }
-    .truncate { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .actions-cell { display: flex; gap: 0.5rem; }
-
-    .photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
-    .photo-card { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1; border: 1px solid var(--admin-border); }
-    .photo-card img { width: 100%; height: 100%; object-fit: cover; }
-    .photo-actions { position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); display: flex; justify-content: center; opacity: 0; transition: opacity 0.2s; }
-    .photo-card:hover .photo-actions { opacity: 1; }
-
-    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
-    .btn-edit { background: var(--admin-surface); border: 1px solid #d1d5db; color: #374151; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; transition: 0.2s; font-weight: 500; font-size: 0.9rem; }
-    .btn-edit:hover { background: #f3f4f6; border-color: #9ca3af; }
-    .btn-danger { background: #fee2e2; border: 1px solid #fca5a5; color: #dc2626; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; transition: 0.2s; font-weight: 500; font-size: 0.9rem; }
-    .btn-danger:hover { background: #fecaca; border-color: #f87171; }
-
-    /* Dashboard items */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-    .stat-card { background-color: var(--admin-surface); border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid var(--admin-border); transition: transform 0.2s; }
-    .stat-card:hover { transform: translateY(-2px); }
-    .stat-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-    .stat-icon :global(svg) { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
-    .stat-info h3 { font-size: 1.8rem; font-weight: 700; margin: 0; color: var(--admin-text); }
-    .stat-info p { font-size: 0.9rem; color: var(--admin-text-muted); margin: 0; }
-    .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-    .action-btn { background-color: var(--admin-surface); border: 1px dashed var(--admin-border); padding: 1.2rem; border-radius: 10px; color: var(--admin-text); font-size: 0.95rem; font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; transition: all 0.2s ease; }
-    .action-btn svg { width: 24px; height: 24px; color: var(--admin-primary); transition: transform 0.2s ease; }
-    .action-btn:hover { border-color: var(--admin-primary); color: var(--admin-primary); background-color: #f9fafb; }
-    .action-btn:hover svg { transform: scale(1.1); }
-  </style>
-
-  <script is:inline>
-    // Utils globales para ser llamados desde onClick
-    function showToast(msg, isError = false) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toast-msg');
-      if(toast && toastMsg) {
-        toastMsg.innerText = msg;
-        toast.className = 'toast show ' + (isError ? 'error' : '');
-        setTimeout(() => toast.classList.remove('show'), 5000);
-      }
-    }
-
-    function openModal(id) {
-      document.getElementById(id).classList.add('active');
-    }
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
-    }
-
-    // Pestañas (botones superiores y sidebar)
-    document.querySelectorAll('.tab-btn, .nav-item[data-target]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        if (e.currentTarget.tagName === 'A') e.preventDefault();
-        
-        const target = e.currentTarget.dataset.target;
-        
-        document.querySelectorAll('.tab-btn, .nav-item[data-target]').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        document.querySelectorAll(`.tab-btn[data-target="${target}"], .nav-item[data-target="${target}"]`).forEach(b => b.classList.add('active'));
-        document.getElementById(target).classList.add('active');
-        localStorage.setItem('adminActiveTab', target);
-        
-        // Cerrar sidebar en mobile
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && window.innerWidth <= 768) sidebar.classList.remove('open');
-      });
-    });
-
-    // Restaurar pestaña activa al recargar
-    document.addEventListener('DOMContentLoaded', () => {
-      const activeTab = localStorage.getItem('adminActiveTab');
-      if (activeTab) {
-        const btn = document.querySelector(`.tab-btn[data-target="${activeTab}"]`);
-        if (btn) btn.click();
-      }
-    });
-
-    // Cerrar modales
-    document.querySelectorAll('.modal-close').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.target.closest('.modal-overlay').classList.remove('active');
-      });
-    });
-
-    // Delete Generic Fetch
-    async function deleteItem(endpoint, id, idField = 'id') {
-      if(!confirm('¿Estás seguro de eliminar este elemento?')) return;
-      try {
-        const res = await fetch(`/api/${endpoint}`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ [idField]: id })
-        });
-        if(!res.ok) throw new Error(await res.text());
-        showToast('Eliminado correctamente');
-        setTimeout(() => window.location.reload(), 1500);
-      } catch (err) {
-        showToast('Error al eliminar', true);
-      }
-    }
-
-    // ================= FOTOS =================
-    document.getElementById('btn-add-photo').addEventListener('click', () => openModal('modal-photo'));
-    document.getElementById('submit-photo').addEventListener('click', async (e) => {
-      const input = document.getElementById('photo-input');
-      const file = input.files[0];
-      if (!file) return showToast('Seleccioná una imagen', true);
-      
-      const btn = e.target;
-      btn.disabled = true;
-      btn.innerText = 'Subiendo...';
-
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        try {
-          const base64Content = reader.result.split(',')[1];
-          const fileName = `${new Date().toISOString().split('T')[0]}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-').toLowerCase()}`;
-          const res = await fetch('/api/photos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ base64Content, fileName })
-          });
-          if (!res.ok) throw new Error('Error al subir');
-          showToast('Foto subida');
-          setTimeout(() => window.location.reload(), 1500);
-        } catch (err) {
-          showToast(err.message, true);
-          btn.disabled = false;
-          btn.innerText = 'Subir Imagen';
-        }
-      };
-    });
-
-    // ================= COMUNIDAD =================
-    document.getElementById('btn-add-comunidad').addEventListener('click', () => {
-      document.getElementById('title-comunidad').innerText = 'Añadir Reseña';
-      document.getElementById('comunidad-id').value = '';
-      document.getElementById('comunidad-autor').value = '';
-      document.getElementById('comunidad-text').value = '';
-      openModal('modal-comunidad');
-    });
-
-    function editComunidad(btn) {
-      document.getElementById('title-comunidad').innerText = 'Editar Reseña';
-      document.getElementById('comunidad-id').value = btn.getAttribute('data-id') || '';
-      document.getElementById('comunidad-autor').value = btn.getAttribute('data-autor') || '';
-      document.getElementById('comunidad-text').value = btn.getAttribute('data-text') || '';
-      openModal('modal-comunidad');
-    }
-
-    document.getElementById('submit-comunidad').addEventListener('click', async (e) => {
-      const id = document.getElementById('comunidad-id').value;
-      const autor = document.getElementById('comunidad-autor').value;
-      const text = document.getElementById('comunidad-text').value;
-      if (!autor || !text) return showToast('Completá los campos', true);
-      
-      const btn = e.target; btn.disabled = true; btn.innerText = 'Guardando...';
-      const method = id ? 'PUT' : 'POST';
-      try {
-        const res = await fetch('/api/comunidad', {
-          method, headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, autor, text })
-        });
-        if (!res.ok) throw new Error('Error');
-        showToast('Guardado');
-        setTimeout(() => window.location.reload(), 1500);
-      } catch (err) {
-        showToast('Error', true);
-        btn.disabled = false; btn.innerText = 'Guardar';
-      }
-    });
-
-    // ================= ENCUENTROS =================
-    document.getElementById('btn-add-encuentro').addEventListener('click', () => {
-      document.getElementById('title-encuentro').innerText = 'Añadir Sede';
-      document.getElementById('encuentro-id').value = '';
-      document.getElementById('encuentro-nombre').value = '';
-      document.getElementById('encuentro-dia').value = '';
-      document.getElementById('encuentro-horario').value = '';
-      document.getElementById('encuentro-direccion').value = '';
-      document.getElementById('encuentro-iguser').value = '';
-      document.getElementById('encuentro-igurl').value = '';
-      document.getElementById('encuentro-map').value = '';
-      document.getElementById('encuentro-orden').value = '0';
-      openModal('modal-encuentro');
-    });
-
-    function editEncuentro(btn) {
-      const id = btn.getAttribute('data-id');
-      const data = JSON.parse(btn.getAttribute('data-payload') || '{}');
-      document.getElementById('title-encuentro').innerText = 'Editar Sede';
-      document.getElementById('encuentro-id').value = id || '';
-      document.getElementById('encuentro-nombre').value = data.nombre || '';
-      document.getElementById('encuentro-dia').value = data.dia || '';
-      document.getElementById('encuentro-horario').value = data.horario || '';
-      document.getElementById('encuentro-direccion').value = data.direccion || '';
-      document.getElementById('encuentro-iguser').value = data.instagram_user || '';
-      document.getElementById('encuentro-igurl').value = data.instagram_url || '';
-      document.getElementById('encuentro-map').value = data.map_iframe || '';
-      document.getElementById('encuentro-orden').value = data.orden || 0;
-      openModal('modal-encuentro');
-    }
-
-    document.getElementById('submit-encuentro').addEventListener('click', async (e) => {
-      const id = document.getElementById('encuentro-id').value;
-      const data = {
-        id,
-        nombre: document.getElementById('encuentro-nombre').value,
-        dia: document.getElementById('encuentro-dia').value,
-        horario: document.getElementById('encuentro-horario').value,
-        direccion: document.getElementById('encuentro-direccion').value,
-        instagram_user: document.getElementById('encuentro-iguser').value,
-        instagram_url: document.getElementById('encuentro-igurl').value,
-        map_iframe: document.getElementById('encuentro-map').value,
-        orden: document.getElementById('encuentro-orden').value
-      };
-      if (!data.nombre || !data.dia) return showToast('Nombre y día son obligatorios', true);
-      
-      const btn = e.target; btn.disabled = true; btn.innerText = 'Guardando...';
-      const method = id ? 'PUT' : 'POST';
-      try {
-        const res = await fetch('/api/encuentros', {
-          method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error('Error');
-        showToast('Guardado');
-        setTimeout(() => window.location.reload(), 1500);
-      } catch (err) {
-        showToast('Error', true);
-        btn.disabled = false; btn.innerText = 'Guardar';
-      }
-    });
-
-    // ================= DUDAS =================
-    document.getElementById('btn-add-duda').addEventListener('click', () => {
-      document.getElementById('title-duda').innerText = 'Añadir Pregunta';
-      document.getElementById('duda-id').value = '';
-      document.getElementById('duda-pregunta').value = '';
-      document.getElementById('duda-orden').value = '0';
-      document.getElementById('duda-text').value = '';
-      openModal('modal-duda');
-    });
-
-    function editDuda(btn) {
-      document.getElementById('title-duda').innerText = 'Editar Pregunta';
-      document.getElementById('duda-id').value = btn.getAttribute('data-id') || '';
-      document.getElementById('duda-pregunta').value = btn.getAttribute('data-pregunta') || '';
-      document.getElementById('duda-orden').value = btn.getAttribute('data-orden') || '0';
-      document.getElementById('duda-text').value = btn.getAttribute('data-text') || '';
-      openModal('modal-duda');
-    }
-
-    document.getElementById('submit-duda').addEventListener('click', async (e) => {
-      const id = document.getElementById('duda-id').value;
-      const pregunta = document.getElementById('duda-pregunta').value;
-      const orden = document.getElementById('duda-orden').value;
-      const text = document.getElementById('duda-text').value;
-      if (!pregunta || !text) return showToast('Completá los campos', true);
-      
-      const btn = e.target; btn.disabled = true; btn.innerText = 'Guardando...';
-      const method = id ? 'PUT' : 'POST';
-      try {
-        const res = await fetch('/api/dudas', {
-          method, headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, pregunta, orden, text })
-        });
-        if (!res.ok) throw new Error('Error');
-        showToast('Guardado');
-        setTimeout(() => window.location.reload(), 1500);
-      } catch (err) {
-        showToast('Error', true);
-        btn.disabled = false; btn.innerText = 'Guardar';
-      }
-    });
-  </script>
+  <PhotoManager photos={photos} />
+  <ComunidadTab comunidad={comunidad} />
+  <EncuentrosTab encuentros={encuentros} />
+  <DudasTab dudas={dudas} />
 </AdminLayout>
+
+<script is:inline>
+  // Tab Switching Logic
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  // Load last active tab
+  const activeTab = localStorage.getItem('adminActiveTab') || 'dashboard';
+  document.querySelector(`.tab-btn[data-target="${activeTab}"]`)?.click();
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.target;
+      
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+      
+      btn.classList.add('active');
+      document.getElementById(target)?.classList.add('active');
+      localStorage.setItem('adminActiveTab', target);
+    });
+  });
+
+  // Global delete logic
+  window.deleteItem = async (collection, id) => {
+    if (!confirm('¿Seguro que querés eliminar este item?')) return;
+    
+    const response = await fetch(`/api/${collection}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+
+    if (response.ok) window.location.reload();
+    else alert('Error al eliminar');
+  };
+
+  // Close modals clicking outside
+  window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+      event.target.style.display = 'none';
+    }
+  }
+</script>
+
+<style>
+  /* Base styles for the admin panel */
+  .page-title { font-size: 1.875rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+  .page-description { color: #6b7280; margin-bottom: 2rem; }
+
+  .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; overflow-x: auto; }
+  .tab-btn { padding: 0.625rem 1.25rem; border-radius: 8px; border: none; background: none; color: #6b7280; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .tab-btn:hover { background-color: #f3f4f6; color: #374151; }
+  .tab-btn.active { background-color: #eff6ff; color: #2563eb; }
+
+  .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+  .tab-content.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+
+  .quick-actions { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb; }
+  .quick-actions h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; }
+  .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+
+  .action-btn { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 0.75rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.2s; }
+  .action-btn:hover { background-color: #f3f4f6; border-color: #d1d5db; }
+  .action-btn svg { width: 1.25rem; height: 1.25rem; }
+
+  /* Section styles used across tabs */
+  :global(.section-header) { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  :global(.section-header h2) { font-size: 1.25rem; font-weight: 600; }
+
+  :global(.table-container) { background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; }
+  :global(table) { width: 100%; border-collapse: collapse; text-align: left; }
+  :global(th) { background-color: #f9fafb; padding: 0.75rem 1.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; }
+  :global(td) { padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; color: #374151; }
+  :global(.truncate) { max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  :global(.actions-cell) { display: flex; gap: 0.5rem; }
+  :global(.btn-edit), :global(.btn-danger), :global(.btn-primary) { padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+  :global(.btn-primary) { background-color: #2563eb; color: white; }
+  :global(.btn-primary:hover) { background-color: #1d4ed8; }
+  :global(.btn-edit) { background-color: #f3f4f6; color: #374151; }
+  :global(.btn-edit:hover) { background-color: #e5e7eb; }
+  :global(.btn-danger) { background-color: #fee2e2; color: #dc2626; }
+  :global(.btn-danger:hover) { background-color: #fecaca; }
+
+  :global(.photos-grid) { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; }
+  :global(.photo-card) { background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; }
+  :global(.photo-card img) { width: 100%; aspect-ratio: 1; object-fit: cover; border-bottom: 1px solid #e5e7eb; }
+  :global(.photo-actions) { padding: 0.75rem; display: flex; justify-content: center; }
+
+  :global(.form-group) { margin-bottom: 1.25rem; }
+  :global(.form-group label) { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
+  :global(.form-control) { width: 100%; padding: 0.625rem; border-radius: 8px; border: 1px solid #d1d5db; font-size: 0.875rem; transition: border-color 0.2s; }
+  :global(.form-control:focus) { outline: none; border-color: #2563eb; ring: 2px solid #bfdbfe; }
+</style>

@@ -1,0 +1,84 @@
+---
+import AdminModal from './AdminModal.astro';
+const { comunidad } = Astro.props;
+---
+
+<section id="comunidad" class="tab-content">
+  <div class="section-header">
+    <h2>Reseñas de la Comunidad</h2>
+    <button class="btn-primary" id="btn-add-comunidad">+ Añadir Reseña</button>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead><tr><th>Autor</th><th>Texto</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {comunidad.map(item => (
+          <tr>
+            <td>{item.data.autor}</td>
+            <td class="truncate">{item.body.substring(0, 50)}...</td>
+            <td class="actions-cell">
+              <button class="btn-edit" data-id={item.id} data-autor={item.data.autor} data-text={item.body} onclick="editComunidad(this)">Editar</button>
+              <button class="btn-danger" onclick={`deleteItem('comunidad', '${item.id}')`}>Eliminar</button>
+            </td>
+          </tr>
+        ))}
+        {comunidad.length === 0 && <tr><td colspan="3">No hay reseñas.</td></tr>}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<AdminModal id="modal-comunidad" title="Añadir Reseña">
+  <input type="hidden" id="comunidad-id">
+  <div class="form-group">
+    <label>Autor / Edad (Ej: ✦ María, 42 años)</label>
+    <input type="text" id="comunidad-autor" class="form-control" placeholder="✦ Nombre, Edad">
+  </div>
+  <div class="form-group">
+    <label>Texto de la reseña</label>
+    <textarea id="comunidad-text" class="form-control" rows="4"></textarea>
+  </div>
+  <button class="btn-primary" id="submit-comunidad">Guardar</button>
+</AdminModal>
+
+<script is:inline>
+  // Logic specifically for this tab/modal
+  const btnAddComunidad = document.getElementById('btn-add-comunidad');
+  const modalComunidad = document.getElementById('modal-comunidad');
+  const titleComunidad = modalComunidad?.querySelector('h2');
+
+  btnAddComunidad?.addEventListener('click', () => {
+    document.getElementById('comunidad-id').value = '';
+    document.getElementById('comunidad-autor').value = '';
+    document.getElementById('comunidad-text').value = '';
+    if (titleComunidad) titleComunidad.innerText = 'Añadir Reseña';
+    modalComunidad.style.display = 'block';
+  });
+
+  window.editComunidad = function(btn) {
+    const { id, autor, text } = btn.dataset;
+    document.getElementById('comunidad-id').value = id;
+    document.getElementById('comunidad-autor').value = autor;
+    document.getElementById('comunidad-text').value = text;
+    if (titleComunidad) titleComunidad.innerText = 'Editar Reseña';
+    modalComunidad.style.display = 'block';
+  };
+
+  document.getElementById('submit-comunidad')?.addEventListener('click', async () => {
+    const id = document.getElementById('comunidad-id').value;
+    const autor = document.getElementById('comunidad-autor').value;
+    const text = document.getElementById('comunidad-text').value;
+
+    if (!autor || !text) return alert('Faltan datos');
+
+    const method = id ? 'PUT' : 'POST';
+    const response = await fetch('/api/comunidad', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, autor, text })
+    });
+
+    if (response.ok) window.location.reload();
+    else alert('Error al guardar');
+  });
+</script>

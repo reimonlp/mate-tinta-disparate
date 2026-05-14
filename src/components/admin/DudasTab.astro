@@ -1,0 +1,89 @@
+---
+import AdminModal from './AdminModal.astro';
+const { dudas } = Astro.props;
+---
+
+<section id="dudas" class="tab-content">
+  <div class="section-header">
+    <h2>Preguntas Frecuentes</h2>
+    <button class="btn-primary" id="btn-add-duda">+ Añadir Pregunta</button>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead><tr><th>Orden</th><th>Pregunta</th><th>Respuesta</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {dudas.sort((a,b)=> (a.data.orden || 0) - (b.data.orden || 0)).map(item => (
+          <tr>
+            <td>{item.data.orden}</td>
+            <td>{item.data.pregunta}</td>
+            <td class="truncate">{item.body.substring(0, 50)}...</td>
+            <td class="actions-cell">
+              <button class="btn-edit" data-id={item.id} data-pregunta={item.data.pregunta} data-orden={item.data.orden} data-text={item.body} onclick="editDuda(this)">Editar</button>
+              <button class="btn-danger" onclick={`deleteItem('dudas', '${item.id}')`}>Eliminar</button>
+            </td>
+          </tr>
+        ))}
+        {dudas.length === 0 && <tr><td colspan="4">No hay dudas.</td></tr>}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<AdminModal id="modal-duda" title="Pregunta Frecuente">
+  <input type="hidden" id="duda-id">
+  <div class="form-group">
+    <label>Pregunta</label>
+    <input type="text" id="duda-pregunta" class="form-control">
+  </div>
+  <div class="form-group">
+    <label>Respuesta</label>
+    <textarea id="duda-text" class="form-control" rows="4"></textarea>
+  </div>
+  <div class="form-group">
+    <label>Orden (para organizar la lista)</label>
+    <input type="number" id="duda-orden" class="form-control" value="0">
+  </div>
+  <button class="btn-primary" id="submit-duda">Guardar</button>
+</AdminModal>
+
+<script is:inline>
+  const btnAddDuda = document.getElementById('btn-add-duda');
+  const modalDuda = document.getElementById('modal-duda');
+
+  btnAddDuda?.addEventListener('click', () => {
+    document.getElementById('duda-id').value = '';
+    document.getElementById('duda-pregunta').value = '';
+    document.getElementById('duda-text').value = '';
+    document.getElementById('duda-orden').value = '0';
+    modalDuda.style.display = 'block';
+  });
+
+  window.editDuda = function(btn) {
+    const { id, pregunta, orden, text } = btn.dataset;
+    document.getElementById('duda-id').value = id;
+    document.getElementById('duda-pregunta').value = pregunta;
+    document.getElementById('duda-text').value = text;
+    document.getElementById('duda-orden').value = orden;
+    modalDuda.style.display = 'block';
+  };
+
+  document.getElementById('submit-duda')?.addEventListener('click', async () => {
+    const id = document.getElementById('duda-id').value;
+    const data = {
+      id,
+      pregunta: document.getElementById('duda-pregunta').value,
+      text: document.getElementById('duda-text').value,
+      orden: parseInt(document.getElementById('duda-orden').value),
+    };
+
+    const method = id ? 'PUT' : 'POST';
+    const response = await fetch('/api/dudas', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) window.location.reload();
+    else alert('Error al guardar');
+  });
+</script>

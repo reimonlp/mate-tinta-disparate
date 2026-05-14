@@ -1,0 +1,128 @@
+---
+import AdminModal from './AdminModal.astro';
+const { encuentros } = Astro.props;
+---
+
+<section id="encuentros" class="tab-content">
+  <div class="section-header">
+    <h2>Sedes y Fechas</h2>
+    <button class="btn-primary" id="btn-add-encuentro">+ Añadir Sede</button>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead><tr><th>Orden</th><th>Nombre</th><th>Día y Horario</th><th>Dirección</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {encuentros.sort((a,b)=> (a.data.orden || 0) - (b.data.orden || 0)).map(item => (
+          <tr>
+            <td>{item.data.orden}</td>
+            <td>{item.data.nombre}</td>
+            <td>{item.data.dia} {item.data.horario}</td>
+            <td>{item.data.direccion}</td>
+            <td class="actions-cell">
+              <button class="btn-edit" data-id={item.id} data-payload={JSON.stringify(item.data)} onclick="editEncuentro(this)">Editar</button>
+              <button class="btn-danger" onclick={`deleteItem('encuentros', '${item.id}')`}>Eliminar</button>
+            </td>
+          </tr>
+        ))}
+        {encuentros.length === 0 && <tr><td colspan="5">No hay sedes.</td></tr>}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<AdminModal id="modal-encuentro" title="Sede / Encuentro">
+  <input type="hidden" id="encuentro-id">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div class="form-group">
+      <label>Nombre</label>
+      <input type="text" id="encuentro-nombre" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Día (Ej: Los sábados)</label>
+      <input type="text" id="encuentro-dia" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Horario</label>
+      <input type="text" id="encuentro-horario" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Orden (para ordenar la lista)</label>
+      <input type="number" id="encuentro-orden" class="form-control" value="0">
+    </div>
+    <div class="form-group" style="grid-column: span 2;">
+      <label>Dirección</label>
+      <input type="text" id="encuentro-direccion" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Usuario Instagram (@)</label>
+      <input type="text" id="encuentro-iguser" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>URL Instagram</label>
+      <input type="text" id="encuentro-igurl" class="form-control">
+    </div>
+    <div class="form-group" style="grid-column: span 2;">
+      <label>Google Maps Iframe URL</label>
+      <input type="text" id="encuentro-map" class="form-control">
+    </div>
+  </div>
+  <button class="btn-primary" id="submit-encuentro" style="margin-top: 1rem;">Guardar</button>
+</AdminModal>
+
+<script is:inline>
+  const btnAddEncuentro = document.getElementById('btn-add-encuentro');
+  const modalEncuentro = document.getElementById('modal-encuentro');
+
+  btnAddEncuentro?.addEventListener('click', () => {
+    document.getElementById('encuentro-id').value = '';
+    document.getElementById('encuentro-nombre').value = '';
+    document.getElementById('encuentro-dia').value = '';
+    document.getElementById('encuentro-horario').value = '';
+    document.getElementById('encuentro-orden').value = '0';
+    document.getElementById('encuentro-direccion').value = '';
+    document.getElementById('encuentro-iguser').value = '';
+    document.getElementById('encuentro-igurl').value = '';
+    document.getElementById('encuentro-map').value = '';
+    modalEncuentro.style.display = 'block';
+  });
+
+  window.editEncuentro = function(btn) {
+    const { id, payload } = btn.dataset;
+    const data = JSON.parse(payload);
+    document.getElementById('encuentro-id').value = id;
+    document.getElementById('encuentro-nombre').value = data.nombre || '';
+    document.getElementById('encuentro-dia').value = data.dia || '';
+    document.getElementById('encuentro-horario').value = data.horario || '';
+    document.getElementById('encuentro-orden').value = data.orden || 0;
+    document.getElementById('encuentro-direccion').value = data.direccion || '';
+    document.getElementById('encuentro-iguser').value = data.instagram_user || '';
+    document.getElementById('encuentro-igurl').value = data.instagram_url || '';
+    document.getElementById('encuentro-map').value = data.map_iframe || '';
+    modalEncuentro.style.display = 'block';
+  };
+
+  document.getElementById('submit-encuentro')?.addEventListener('click', async () => {
+    const id = document.getElementById('encuentro-id').value;
+    const data = {
+      id,
+      nombre: document.getElementById('encuentro-nombre').value,
+      dia: document.getElementById('encuentro-dia').value,
+      horario: document.getElementById('encuentro-horario').value,
+      orden: parseInt(document.getElementById('encuentro-orden').value),
+      direccion: document.getElementById('encuentro-direccion').value,
+      instagram_user: document.getElementById('encuentro-iguser').value,
+      instagram_url: document.getElementById('encuentro-igurl').value,
+      map_iframe: document.getElementById('encuentro-map').value,
+    };
+
+    const method = id ? 'PUT' : 'POST';
+    const response = await fetch('/api/encuentros', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) window.location.reload();
+    else alert('Error al guardar');
+  });
+</script>
