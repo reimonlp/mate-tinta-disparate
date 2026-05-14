@@ -3,8 +3,25 @@ import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 
+// Simple async queue to prevent Git concurrency issues
+class GitQueue {
+  private queue: Promise<void> = Promise.resolve();
+
+  async enqueue(task: () => Promise<void>): Promise<void> {
+    this.queue = this.queue.then(async () => {
+      try {
+        await task();
+      } catch (error) {
+        console.error('[GitQueue Task Error]', error);
+      }
+    });
+    return this.queue;
+  }
+}
+
+const gitQueue = new GitQueue();
+
 export async function commitAndPush(message: string): Promise<void> {
-  // Solo ejecutamos esto si estamos en un entorno donde .git existe
   const isProd = process.env.NODE_ENV === 'production' || process.env.GIT_SYNC_ENABLED === 'true';
   
   if (!isProd) {
@@ -12,30 +29,34 @@ export async function commitAndPush(message: string): Promise<void> {
     return;
   }
 
-  try {
-    const cwd = process.cwd();
-    
-    // Agregamos todos los cambios (especialmente en src/content y public/photos)
-    await execAsync('git add src/content/ public/photos/ dist/client/photos/ || true', { cwd });
-    
-    // Hacemos el commit (ignoramos error si no hay cambios)
+  // Enqueue the git operation
+  await gitQueue.enqueue(async () => {
     try {
-      await execAsync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd });
-    } catch (commitErr: any) {
-      if (commitErr.stdout && commitErr.stdout.includes('nothing to commit')) {
-        console.log('[Git Sync] No hay cambios para commitear.');
-        return;
+      const cwd = process.cwd();
+      
+      // Pull first to avoid push conflicts if other processes committed
+      try {
+        await execAsync('git pull --rebase origin main', { cwd });
+      } catch (pullErr) {
+        console.warn('[Git Sync] Pull failed, continuing anyway...', pullErr);
       }
-      throw commitErr;
+
+      await execAsync('git add src/content/ public/photos/ dist/client/photos/ || true', { cwd });
+      
+      try {
+        await execAsync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd });
+      } catch (commitErr: any) {
+        if (commitErr.stdout && commitErr.stdout.includes('nothing to commit')) {
+          console.log('[Git Sync] No hay cambios para commitear.');
+          return;
+        }
+        throw commitErr;
+      }
+      
+      await execAsync('git push origin main', { cwd });
+      console.log(`[Git Sync] Éxito: ${message}`);
+    } catch (error) {
+      console.error('[Git Sync Error]', error);
     }
-    
-    // Hacemos push al main (asegúrate de que el contenedor o server tenga credenciales)
-    await execAsync('git push origin main', { cwd });
-    
-    console.log(`[Git Sync] Éxito: ${message}`);
-  } catch (error) {
-    console.error('[Git Sync Error]', error);
-    // No lanzamos el error para no romper la respuesta del servidor al cliente,
-    // pero queda registrado en los logs.
-  }
+  });
 }
