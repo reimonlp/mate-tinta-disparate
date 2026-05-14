@@ -7,6 +7,22 @@
   border: 0.5px solid var(--color-border-tertiary);
   border-radius: 6px; display: flex; align-items: center; gap: 8px;
 }
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  body { margin: 0; padding: 0; background: #fff; }
+  .fz-wrap { padding: 0; margin: 0; }
+  .fz-note, .fz-footer-info { display: none; }
+  .fanzine {
+    width: 297mm;
+    height: 210mm;
+    border: none;
+    max-width: none;
+    box-shadow: none;
+  }
+}
+
+.fz-footer-info { margin-top:10px; font-size:10px; color:var(--color-text-secondary); line-height:1.6; padding:8px 12px; border:0.5px solid var(--color-border-tertiary); border-radius:6px; }
+
 .fanzine {
   width: 100%; max-width: 900px;
   aspect-ratio: 297 / 210; /* Proporción A4 apaisado */
@@ -14,21 +30,22 @@
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(2, 1fr);
   position: relative;
-  border: 1.5px solid #333;
+  border: 1px solid #eee; /* Borde muy sutil para guía de corte si es necesario */
   box-sizing: border-box; overflow: hidden;
   background: #fff;
+  margin: 0 auto;
 }
 .panel {
   box-sizing: border-box;
   display: flex; flex-direction: column;
   justify-content: center; align-items: center;
   padding: 0; position: relative; overflow: hidden;
-  border: 0.5px solid #666;
+  border: 0.2px solid #efefef; /* Guía de panel muy sutil */
 }
-.fold-h { position: absolute; top: 50%; left: 0; right: 0; border-top: 1.5px dashed #aaa; pointer-events: none; z-index: 10; }
-.fold-v-1 { position: absolute; left: 25%; top: 0; bottom: 0; border-left: 1.5px dashed #aaa; pointer-events: none; z-index: 10; }
-.fold-v-2 { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1.5px dashed #aaa; pointer-events: none; z-index: 10; }
-.fold-v-3 { position: absolute; left: 75%; top: 0; bottom: 0; border-left: 1.5px dashed #aaa; pointer-events: none; z-index: 10; }
+.fold-h { position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed #ccc; pointer-events: none; z-index: 10; }
+.fold-v-1 { position: absolute; left: 25%; top: 0; bottom: 0; border-left: 1px dashed #ccc; pointer-events: none; z-index: 10; }
+.fold-v-2 { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px dashed #ccc; pointer-events: none; z-index: 10; }
+.fold-v-3 { position: absolute; left: 75%; top: 0; bottom: 0; border-left: 1px dashed #ccc; pointer-events: none; z-index: 10; }
 .pat-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; }
 .panel-content { position: relative; z-index: 1; width: 100%; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; }
 
@@ -98,7 +115,14 @@
   
   <!-- Slot 1: P5 — Estrofa 3 -->
   <div class="panel" id="p5">
-    <svg class="pat-bg" id="pat5"></svg>
+    <svg class="pat-bg" id="pat5" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <pattern id="dots5" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="0.8" fill="#eee" />
+        </pattern>
+      </defs>
+      <rect width="100" height="100" fill="url(#dots5)" />
+    </svg>
     <div class="panel-content estrofa-inner rot">
       <div class="est-num">Tercera estrofa</div>
       <div class="est-texto">MAÑANA SE LO LLEVAN<br>PRESO A UN CORONEL<br>POR PINCHAR A LA MERMELADA<br>CON UN ALFILER.<br>PARECE QUE EL AZÚCAR<br>SIEMPRE NEGRA FUE,<br>Y DE UN SUSTO SE PUSO BLANCA,<br>TAL COMO LA VEN.</div>
@@ -115,7 +139,14 @@
 
   <!-- Slot 3: P3 — Estrofa 1 -->
   <div class="panel" id="p3">
-    <svg class="pat-bg" id="pat3"></svg>
+    <svg class="pat-bg" id="pat3" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <pattern id="lines3" x="0" y="0" width="20" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="20" y2="0" stroke="#f0f0f0" stroke-width="1" />
+        </pattern>
+      </defs>
+      <rect width="100" height="100" fill="url(#lines3)" />
+    </svg>
     <div class="panel-content estrofa-inner rot">
       <div class="est-num">Primera estrofa</div>
       <div class="est-texto">ESTAMOS INVITADOS<br>A TOMAR EL TÉ.<br>LA TETERA ES DE PORCELANA<br>PERO NO SE VE.<br>YO NO SÉ POR QUÉ<br>LA LECHE TIENE FRÍO<br>Y LA ABRIGARÉ:<br>LE PONDRÉ UN SOBRETODO MÍO,<br>LARGO HASTA LOS PIES.</div>
@@ -137,7 +168,14 @@
 
   <!-- Slot 5: P6 — Estrofa 4 -->
   <div class="panel" id="p6">
-    <svg class="pat-bg" id="pat7"></svg>
+    <svg class="pat-bg" id="pat7" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <pattern id="grid6" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse">
+          <path d="M 15 0 L 0 0 0 15" fill="none" stroke="#f4f4f4" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="100" height="100" fill="url(#grid6)" />
+    </svg>
     <div class="panel-content estrofa-inner">
       <div class="est-num">Cuarta estrofa</div>
       <div class="est-texto">UN PLATO TIMORATO<br>SE CASÓ ANTEAYER.<br>A SU ESPOSA LA CAFETERA<br>LA TRATA DE USTED.<br>LOS POBRES COLADORES<br>TIENEN MUCHA SED<br>PORQUE EL AGUA SE LES ESCAPA<br>CADA DOS POR TRES.</div>
@@ -146,7 +184,10 @@
 
   <!-- Slot 6: P7 — Espacios -->
   <div class="panel" id="p7">
-    <svg class="pat-bg" id="pat6"></svg>
+    <svg class="pat-bg" id="pat6" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <circle cx="90" cy="10" r="20" fill="#f0f0f0" />
+      <circle cx="10" cy="90" r="15" fill="#f8f8f8" />
+    </svg>
     <div class="panel-content p7-inner">
       <div class="p7-enc">Dónde encontrarnos</div>
       <div class="p7-espacio">
@@ -167,10 +208,13 @@
 
   <!-- Slot 7: P8 — Contraportada (Fin) -->
   <div class="panel" id="p8">
-    <svg class="pat-bg" id="pat8"></svg>
+    <svg class="pat-bg" id="pat8" viewBox="0 0 100 100" preserveAspectRatio="none">
+       <rect width="100" height="100" fill="#f9f9f9" />
+       <path d="M0 100 Q 50 50 100 100" fill="none" stroke="#eee" stroke-width="2" />
+    </svg>
     <div class="panel-content p8-inner">
       <div class="p8-logo-wrap">
-        <img id="logoImg" alt="Logo Mate Tinta y Disparate"/>
+        <img id="logoImg" src="logo.jpeg" alt="Logo Mate Tinta y Disparate"/>
       </div>
       <div class="p8-nombre">Mate, Tinta<br><em>y Disparate</em></div>
       <div class="p8-ig">@mate.tinta.disparate</div>
@@ -186,7 +230,14 @@
 
   <!-- Slot 8: P1 — Portada -->
   <div class="panel" id="p1">
-    <svg class="pat-bg" id="pat1"></svg>
+    <svg class="pat-bg" id="pat1" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <pattern id="cross1" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 10 5 L 10 15 M 5 10 L 15 10" stroke="#999" stroke-width="0.5" />
+        </pattern>
+      </defs>
+      <rect width="100" height="100" fill="url(#cross1)" opacity="0.3" />
+    </svg>
     <div class="panel-content p1-inner">
       <div class="p1-deco">✦</div>
       <div class="p1-titulo">Mate, Tinta<br><em>y Disparate</em></div>
@@ -197,7 +248,7 @@
   </div>
 </div>
 
-<div style="margin-top:10px; font-size:10px; color:var(--color-text-secondary); line-height:1.6; padding:8px 12px; border:0.5px solid var(--color-border-tertiary); border-radius:6px;">
+<div class="fz-footer-info">
   <strong style="font-weight:500;">Fila superior (Paneles 5, 4, 3 y 2)</strong> invertida para mantener la coherencia al plegar la hoja transversalmente.
 </div>
 </div>
