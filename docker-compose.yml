@@ -5,6 +5,12 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     container_name: mate-tinta-disparate
+    environment:
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASS=${ADMIN_PASS:-disparate2026}
+      - JWT_SECRET=${JWT_SECRET:-change-me-please-12345678}
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET:-}
+      - GIT_SYNC_ENABLED=true
     networks:
       - proxy-network
     volumes:
