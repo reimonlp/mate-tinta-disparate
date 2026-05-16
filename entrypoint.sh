@@ -10,9 +10,18 @@ echo "---------------------------------------"
 # Forzar Git a confiar en /app
 git config --global --add safe.directory /app
 
-# Verificar package.json
+# Verificar package.json, si no está, intentar recuperar de Git
 if [ ! -f "package.json" ]; then
-  echo "FATAL ERROR: No se encontró package.json en $(pwd)"
+  echo "AVISO: No se encontró package.json. ¿Volumen vacío? Intentando clonar repo..."
+  # Aquí asumimos que el repo está configurado o usamos los archivos que ya se copiaron en el build
+  # Si el COPY . . del Dockerfile funcionó, los archivos deberían estar en /app a menos que el volume los tape.
+  # Si el volume los tapa y está vacío, los recuperamos del backup que hicimos en /usr/local/src (agregaremos esto al Dockerfile)
+  cp -r /app_backup/. /app/
+fi
+
+# Verificar package.json de nuevo
+if [ ! -f "package.json" ]; then
+  echo "FATAL ERROR: No se pudo recuperar el código en /app"
   exit 1
 fi
 

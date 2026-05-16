@@ -13,6 +13,9 @@ COPY tsconfig.json ./
 # Copiar el resto del código
 COPY . .
 
+# Crear un backup del código para poder restaurarlo si el volumen montado está vacío
+RUN mkdir /app_backup && cp -r /app/. /app_backup/
+
 # Mover el entrypoint a una ubicación fuera de /app para evitar que sea tapado por volúmenes
 RUN cp entrypoint.sh /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
