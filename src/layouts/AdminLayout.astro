@@ -197,6 +197,39 @@ const { title } = Astro.props;
     const menuBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.getElementById('sidebar');
     const logoutBtn = document.getElementById('logout-btn');
+    const navItems = document.querySelectorAll('.nav-item[data-target]');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Sidebar navigation logic
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        const target = (item as HTMLElement).dataset.target;
+        if (target && document.getElementById(target)) {
+          e.preventDefault();
+          
+          // Update active state in nav
+          navItems.forEach(nav => nav.classList.remove('active'));
+          item.classList.add('active');
+
+          // Update visible tab
+          tabContents.forEach(content => content.classList.remove('active'));
+          document.getElementById(target)?.classList.add('active');
+
+          // Persist state
+          localStorage.setItem('adminActiveTab', target);
+          
+          // Close mobile sidebar
+          sidebar?.classList.remove('open');
+        }
+      });
+    });
+
+    // Initial load logic
+    const activeTab = localStorage.getItem('adminActiveTab') || 'dashboard';
+    const activeNavItem = document.querySelector(`.nav-item[data-target="${activeTab}"]`);
+    if (activeNavItem) {
+      (activeNavItem as HTMLElement).click();
+    }
 
     if (menuBtn && sidebar) {
       menuBtn.addEventListener('click', (e) => {
