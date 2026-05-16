@@ -10,14 +10,14 @@ COPY package*.json ./
 COPY astro.config.mjs ./
 COPY tsconfig.json ./
 
-# Copiar el resto del código (incluyendo entrypoint)
+# Copiar el resto del código
 COPY . .
 
-# Dar permisos de ejecución al entrypoint
-RUN chmod +x /app/entrypoint.sh
+# Mover el entrypoint a una ubicación fuera de /app para evitar que sea tapado por volúmenes
+RUN cp entrypoint.sh /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
 # Exponer puerto de Astro
 EXPOSE 80
 
-# Usar el entrypoint
-CMD ["/bin/sh", "/app/entrypoint.sh"]
+# Usar el entrypoint desde la ubicación segura
+CMD ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
