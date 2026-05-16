@@ -9,6 +9,9 @@ services:
       - proxy-network
     volumes:
       - .:/app
+      - /app/node_modules
+      - /app/.astro
+      - /app/dist
 
 networks:
   proxy-network:
