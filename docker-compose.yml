@@ -14,10 +14,14 @@ services:
     networks:
       - proxy-network
     volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.astro
-      - /app/dist
+      - node_modules:/app/node_modules
+      - astro_data:/app/.astro
+      - dist_data:/app/dist
+
+volumes:
+  node_modules:
+  astro_data:
+  dist_data:
 
 networks:
   proxy-network:
