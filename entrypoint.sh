@@ -13,6 +13,12 @@ git config --global --add safe.directory /app
 git config --global user.email "bot@matetintadisparate.com"
 git config --global user.name "MTyD Bot"
 
+# Si hay un token, re-configurar el remote para que sea automático
+if [ ! -z "$GITHUB_TOKEN" ]; then
+  echo "Configurando acceso autenticado a GitHub..."
+  git remote set-url origin "https://${GITHUB_TOKEN}@github.com/reimonlp/mate.tinta.disparate.git"
+fi
+
 # Función para iniciar el servidor
 start_server() {
   echo "Iniciando servidor Node.js en puerto 80..."

@@ -56,7 +56,15 @@ export async function commitAndPush(message: string): Promise<void> {
       }
 
       if (hasChanges) {
-        await execAsync('git push origin main', { cwd });
+        const token = process.env.GITHUB_TOKEN;
+        if (token) {
+          // Use token for authentication
+          const remoteUrl = `https://${token}@github.com/reimonlp/mate.tinta.disparate.git`;
+          await execAsync(`git push ${remoteUrl} main`, { cwd });
+        } else {
+          // Fallback to default push (might fail if not authenticated)
+          await execAsync('git push origin main', { cwd });
+        }
         console.log(`[Git Sync] Éxito: ${message}`);
       }
     } catch (error) {
