@@ -4,8 +4,8 @@ import { jwtVerify } from "jose";
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
 
-  // Excluir la página de login y la API de auth
-  if (url.pathname === '/admin/login' || url.pathname === '/api/auth') {
+  // Excluir la página de login, la API de auth y el webhook de GitHub
+  if (url.pathname === '/admin/login' || url.pathname === '/api/auth' || url.pathname === '/api/webhook') {
     return next();
   }
 
