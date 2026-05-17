@@ -10,6 +10,8 @@ echo "---------------------------------------------"
 
 # Configuración global de Git
 git config --global --add safe.directory /app
+git config --global user.email "bot@matetintadisparate.com"
+git config --global user.name "MTyD Bot"
 
 # Función para iniciar el servidor
 start_server() {
