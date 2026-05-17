@@ -10,7 +10,7 @@ echo "---------------------------------------------"
 
 # Configuración global de Git
 git config --global --add safe.directory /app
-git config --global user.email "bot@matetintadisparate.com"
+git config --global user.email "bot@disparate.com.ar"
 git config --global user.name "MTyD Bot"
 
 # Si hay un token, re-configurar el remote para que sea automático
